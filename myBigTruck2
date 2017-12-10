@@ -1,0 +1,220 @@
+// ============================================================================
+// Source: STEAM Clown - www.steamclown.org 
+// GitHub: https://github.com/jimTheSTEAMClown/arduinoCode
+// Hacker: Jim Burnham - STEAM Clown, Engineer, Maker, Propmaster & Adrenologist 
+// This example code is licensed under the CC BY-NC-SA 3.0.
+// https://creativecommons.org/licenses/by-nc-sa/3.0/
+// Create Date:     12/02/2017 
+// Design Name:     myBigTruck
+// Description:     This is a DIY RoboCar that has left and right drive motors.  
+// The left motor drives both left wheels and the right motor drives both right wheels...
+// More like a tracked vehical 
+// Dependencies: 
+// Revision: 
+// Revision 0.02 - Updated for SVCTE Mechatronics Class
+// Revision 0.01 - Created 12/02/2017
+// Additional Comments: 
+// For more on the DIY RoboCars project see https://diyrobocars.com/
+// This Arduino based system uses the L9110 motor driver for controlling 2 small DC motors
+//   http://www.bajdi.com is an informational source on the L9110 module
+// ============================================================================ 
+
+// Left Motor 
+const int leftDirControl1 = 2;
+const int leftDirControl2 = 3;
+const int leftSpeedControlPin = 9; // Needs to be a PWM pin to be able to control motor speed
+
+// Right Motor
+const int rightDirControl1 = 4;
+const int rightDirControl2 = 5;
+const int rightSpeedControlPin = 10; // Needs to be a PWM pin to be able to control motor speed
+
+byte carSpeed = 0;  // change this (0-255) to control the speed of the motors
+byte leftSpeed = 0;  // change this (0-255) to control the speed of the motors
+byte rightSpeed = 0;  // change this (0-255) to control the speed of the motors
+char carDirection = 'S'; // S=STOP, F=Forward, B=Reverse
+char leftDirection = 'S'; // S=STOP, F=Forward, B=Reverse
+char rightDirection = 'S';  // S=STOP, F=Forward, B=Reverse  
+
+void setup() {
+    // initialize serial communication @ 9600 baud:
+    Serial.begin(9600);
+
+    //Define L298N Dual H-Bridge Motor Controller Pins
+    pinMode(leftDirControl1,OUTPUT);
+    pinMode(leftDirControl2,OUTPUT);
+    pinMode(leftSpeedControlPin,OUTPUT);
+    pinMode(rightDirControl1,OUTPUT);
+    pinMode(rightDirControl2,OUTPUT);
+    pinMode(rightSpeedControlPin,OUTPUT);
+  }
+   
+  void loop() {
+    carSpeed = 255;
+    allDriveMotorsStop();
+    delay(5000);
+    drive('F', carSpeed);    
+    delay(3000);
+    drive('S', carSpeed);    
+    delay(1000);    
+    drive('B', carSpeed);    
+    delay(2000);    
+    drive('S', carSpeed);    
+    delay(1000);
+    drive('l', carSpeed);    
+    delay(3000);
+    drive('S', carSpeed);    
+    delay(1000); 
+    drive('B', carSpeed);    
+    delay(3000); 
+    drive('S', carSpeed);    
+    delay(500); 
+    drive('r', carSpeed);    
+    delay(3000);
+    drive('S', carSpeed);    
+    delay(1000);
+    drive('B', carSpeed);    
+    delay(3000);  
+    drive('S', carSpeed);    
+    delay(1000);            
+    drive('P', carSpeed);    
+    delay(2000);
+    drive('S', carSpeed);    
+    delay(500);
+    drive('p', carSpeed);    
+    delay(2000);
+    drive('B', carSpeed);    
+    delay(2000);                          
+     
+  }
+
+// ============================================================================  
+
+void allDriveMotorsStop()
+  {
+    analogWrite(leftSpeedControlPin, 0);//Sets speed variable via PWM
+    analogWrite(rightSpeedControlPin, 0);//Sets speed variable via PWM  
+    digitalWrite(leftDirControl1, LOW);
+    digitalWrite(leftDirControl2, LOW);
+    digitalWrite(rightDirControl1, LOW); 
+    digitalWrite(rightDirControl2, LOW);
+    Serial.println("All Motors STOPPED");  
+  }
+
+  int allDriveMotorsForward(int carSpeed)
+  {
+    analogWrite(leftSpeedControlPin, carSpeed);//Sets speed variable via PWM
+    analogWrite(rightSpeedControlPin, carSpeed);//Sets speed variable via PWM  
+    digitalWrite(leftDirControl1, LOW);
+    digitalWrite(leftDirControl2, HIGH);
+    digitalWrite(rightDirControl1, LOW); 
+    digitalWrite(rightDirControl2, HIGH);
+    Serial.print("car is Forward at a speed of ");
+    Serial.println(carSpeed);  
+  }
+  int allDriveMotorsReverse(int carSpeed)
+  {
+    analogWrite(leftSpeedControlPin, carSpeed);//Sets speed variable via PWM
+    analogWrite(rightSpeedControlPin, carSpeed);//Sets speed variable via PWM  
+    digitalWrite(leftDirControl1, HIGH);
+    digitalWrite(leftDirControl2, LOW);
+    digitalWrite(rightDirControl1, HIGH); 
+    digitalWrite(rightDirControl2, LOW);
+    Serial.print("car is Reverse at a speed of ");
+    Serial.println(carSpeed);  
+  }  
+int drive(char carDirection, int carSpeed)
+  {
+    if(carDirection=='F') // Forward
+    {
+      analogWrite(leftSpeedControlPin, carSpeed);//Sets speed variable via PWM
+      analogWrite(rightSpeedControlPin, carSpeed);//Sets speed variable via PWM 
+      digitalWrite(leftDirControl1, LOW);
+      digitalWrite(leftDirControl2, HIGH);
+      digitalWrite(rightDirControl1, LOW); 
+      digitalWrite(rightDirControl2, HIGH);
+      Serial.print("Forward at a speed of ");
+      Serial.println(carSpeed);
+    }
+    else if(carDirection=='l') // Slight Left
+    {
+      //leftSpeed = carSpeed - (carSpeed*0.50); // Sets leftspeed variable via PWM to less than current carSpeed
+      leftSpeed = 50; // Sets leftspeed variable via PWM to less than current carSpeed
+      rightSpeed = carSpeed; // Sets rightspeed variable via PWM to current carSpeed
+      analogWrite(leftSpeedControlPin, leftSpeed);//Sets speed variable via PWM to less than current carSpeed
+      analogWrite(rightSpeedControlPin, rightSpeed);//Sets carSpeed variable via PWM 
+      digitalWrite(leftDirControl1, HIGH);
+      digitalWrite(leftDirControl2, LOW);
+      digitalWrite(rightDirControl1, LOW); 
+      digitalWrite(rightDirControl2, HIGH);
+      Serial.print("car is Forward + Left at a speed of ");
+      Serial.println(leftSpeed);
+    }
+    else if(carDirection=='r') // Slight Right
+    {
+      leftSpeed = carSpeed; // Sets rightspeed variable via PWM to current carSpeed
+      //rightSpeed = carSpeed - (carSpeed*0.50); // Sets rightSpeed variable via PWM to less than current carSpeed
+      rightSpeed = 50; // Sets rightSpeed variable via PWM to less than current carSpeed
+      analogWrite(leftSpeedControlPin, leftSpeed);//Sets speed variable via PWM to less than current carSpeed
+      analogWrite(rightSpeedControlPin, rightSpeed);//Sets carSpeed variable via PWM 
+      digitalWrite(leftDirControl1, LOW);
+      digitalWrite(leftDirControl2, HIGH);
+      digitalWrite(rightDirControl1, HIGH); 
+      digitalWrite(rightDirControl2, LOW);
+      Serial.print("car is Forward + Right at a speed of ");
+      Serial.println(rightSpeed);
+    }
+
+    else if(carDirection=='P') // Spin Hard Left
+    {
+      analogWrite(leftSpeedControlPin, carSpeed);//Sets speed variable via PWM
+      analogWrite(rightSpeedControlPin, carSpeed);//Sets speed variable via PWM       
+      digitalWrite(leftDirControl1, HIGH);
+      digitalWrite(leftDirControl2, LOW);
+      digitalWrite(rightDirControl1, LOW); 
+      digitalWrite(rightDirControl2, HIGH);
+      Serial.print("car is Spinning Hard Left at a speed of ");
+      Serial.println(carSpeed);      
+    }            
+    else if(carDirection=='p') // Spin Hard Right
+    {
+      analogWrite(leftSpeedControlPin, carSpeed);//Sets speed variable via PWM
+      analogWrite(rightSpeedControlPin, carSpeed);//Sets speed variable via PWM       
+      digitalWrite(leftDirControl1, LOW);
+      digitalWrite(leftDirControl2, HIGH);
+      digitalWrite(rightDirControl1, HIGH); 
+      digitalWrite(rightDirControl2, LOW);
+      Serial.print("car is Spinning Hard Right at a speed of ");
+      Serial.println(carSpeed);      
+    }            
+    else if(carDirection=='B')
+    {
+      analogWrite(leftSpeedControlPin, carSpeed);//Sets speed variable via PWM
+      analogWrite(rightSpeedControlPin, carSpeed);//Sets speed variable via PWM 
+      digitalWrite(leftDirControl1, HIGH);
+      digitalWrite(leftDirControl2, LOW);
+      digitalWrite(rightDirControl1, HIGH); 
+      digitalWrite(rightDirControl2, LOW);
+      Serial.print("car is Reverse at a speed of ");
+      Serial.println(carSpeed);      
+    }
+    else if(carDirection=='S')
+    {
+      analogWrite(leftSpeedControlPin, carSpeed);//Sets speed variable via PWM
+      analogWrite(rightSpeedControlPin, carSpeed);//Sets speed variable via PWM       
+      digitalWrite(leftDirControl1, LOW);
+      digitalWrite(leftDirControl2, LOW);
+      digitalWrite(rightDirControl1, LOW); 
+      digitalWrite(rightDirControl2, LOW);
+      Serial.print("car is Stopped at a speed of ");
+      Serial.println(carSpeed);      
+    }
+    else
+    {
+      Serial.print("What? ");
+      Serial.print(carDirection);
+      Serial.print(" ");
+      Serial.println(carSpeed); 
+    }
+
+}
