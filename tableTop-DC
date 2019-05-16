@@ -1,0 +1,146 @@
+/*
+  Ultrasonic Sensor HC-SR04 and Arduino Tutorial
+
+  by Dejan Nedelkovski,
+  www.HowToMechatronics.com
+
+*/
+// Left Motor
+const int leftDirControl1 = 2;
+const int leftDirControl2 = 3;
+const int leftSpeedControlPin = 4; // Needs to be a PWM pin to be able to control motor speed
+
+// Right Motor
+const int rightDirControl1 = 5;
+const int rightDirControl2 = 6;
+const int rightSpeedControlPin = 7; // Needs to be a PWM pin to be able to control motor speed
+
+byte carSpeed = 0;  // change this (0-100) to control the speed of the motors
+byte leftSpeed = 0;  // change this (0-100) to control the speed of the motors
+byte rightSpeed = 0;  // change this (0-100) to control the speed of the motors
+char carDirection = 'S'; // S=STOP, F=Forward, B=Reverse
+char leftDirection = 'S'; // S=STOP, F=Forward, B=Reverse
+char rightDirection = 'S';  // S=STOP, F=Forward, B=Reverse
+
+// defines pins numbers
+const int trigPin = 9;
+const int echoPin = 10;
+
+// defines variables
+long duration;
+int distance;
+
+void setup() {
+  pinMode(trigPin, OUTPUT); // Sets the trigPin as an Output
+  pinMode(echoPin, INPUT); // Sets the echoPin as an Input
+
+  //Define L298N Dual H-Bridge Motor Controller Pins
+  pinMode(leftDirControl1, OUTPUT);
+  pinMode(leftDirControl2, OUTPUT);
+  pinMode(leftSpeedControlPin, OUTPUT);
+  pinMode(rightDirControl1, OUTPUT);
+  pinMode(rightDirControl2, OUTPUT);
+  pinMode(rightSpeedControlPin, OUTPUT);
+
+  // initialize digital pin LED_BUILTIN as an output.
+  pinMode(LED_BUILTIN, OUTPUT);
+
+  Serial.begin(9600); // Starts the serial communication
+  allDriveMotorsStop();
+}
+
+void loop() {
+  // Clears the trigPin
+  digitalWrite(trigPin, LOW);
+  delayMicroseconds(2);
+
+  // Sets the trigPin on HIGH state for 10 micro seconds
+  digitalWrite(trigPin, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(trigPin, LOW);
+
+  // Reads the echoPin, returns the sound wave travel time in microseconds
+  duration = pulseIn(echoPin, HIGH);
+
+  // Calculating the distance
+  distance = duration * 0.034 / 2;
+  if (distance > 10) {
+    // write code that does something when your distance threshhold is found
+    //alarm();
+    allDriveMotorsStop();
+    delay(2000);
+    allDriveMotorsReverse(100);
+    delay(500);
+    DriveMotorsLeftBack(100);
+    delay(500);
+    Serial.println("less than 10");
+  }
+  else {
+    // write code that does something when your distance threshhold is NOT found
+    digitalWrite(LED_BUILTIN, HIGH);
+    Serial.print(distance);
+    allDriveMotorsForward(150);
+    Serial.println(" is more than 10");
+  }
+
+  // Prints the distance on the Serial Monitor
+  Serial.print("Distance: ");
+  Serial.println(distance);
+}
+
+
+void allDriveMotorsStop()
+{
+  analogWrite(leftSpeedControlPin, 0);//Sets speed variable via PWM
+  analogWrite(rightSpeedControlPin, 0);//Sets speed variable via PWM
+  digitalWrite(leftDirControl1, LOW);
+  digitalWrite(leftDirControl2, LOW);
+  digitalWrite(rightDirControl1, LOW);
+  digitalWrite(rightDirControl2, LOW);
+  Serial.println("All Motors STOPPED");
+}
+
+int allDriveMotorsForward(int carSpeed)
+{
+  analogWrite(leftSpeedControlPin, carSpeed);//Sets speed variable via PWM
+  analogWrite(rightSpeedControlPin, carSpeed);//Sets speed variable via PWM
+  digitalWrite(leftDirControl1, LOW);
+  digitalWrite(leftDirControl2, HIGH);
+  digitalWrite(rightDirControl1, LOW);
+  digitalWrite(rightDirControl2, HIGH);
+  Serial.print("car is Forward at a speed of ");
+  Serial.println(carSpeed);
+}
+int allDriveMotorsReverse(int carSpeed)
+{
+  analogWrite(leftSpeedControlPin, carSpeed);//Sets speed variable via PWM
+  analogWrite(rightSpeedControlPin, carSpeed);//Sets speed variable via PWM
+  digitalWrite(leftDirControl1, HIGH);
+  digitalWrite(leftDirControl2, LOW);
+  digitalWrite(rightDirControl1, HIGH);
+  digitalWrite(rightDirControl2, LOW);
+  Serial.print("car is Reverse at a speed of ");
+  Serial.println(carSpeed);
+}
+int DriveMotorsLeftBack(int carSpeed)
+{
+  analogWrite(leftSpeedControlPin, carSpeed);//Sets speed variable via PWM
+  analogWrite(rightSpeedControlPin, carSpeed);//Sets speed variable via PWM
+  digitalWrite(leftDirControl1, HIGH);
+  digitalWrite(leftDirControl2, LOW);
+  digitalWrite(rightDirControl1, LOW);
+  digitalWrite(rightDirControl2, HIGH);
+  Serial.print("car is Reverse at a speed of ");
+  Serial.println(carSpeed);
+}
+int DriveMotorsRightBack(int carSpeed)
+{
+  analogWrite(leftSpeedControlPin, carSpeed);//Sets speed variable via PWM
+  analogWrite(rightSpeedControlPin, carSpeed);//Sets speed variable via PWM
+  digitalWrite(leftDirControl1, LOW);
+  digitalWrite(leftDirControl2, HIGH);
+  digitalWrite(rightDirControl1, HIGH);
+  digitalWrite(rightDirControl2, LOW);
+  Serial.print("car is Reverse at a speed of ");
+  Serial.println(carSpeed);
+}
