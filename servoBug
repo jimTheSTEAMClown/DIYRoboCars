@@ -1,0 +1,273 @@
+ /* 
+# ============================================================================
+# Source: STEAM Clown - www.steamclown.org 
+# GitHub: https://github.com/jimTheSTEAMClown
+# Hacker: Jim Burnham - STEAM Clown, Engineer, Maker, Propmaster & Adrenologist 
+# This example code is licensed under the CC BY-NC-SA 4.0, GNU GPL and EUPL
+# https://creativecommons.org/licenses/by-nc-sa/4.0/
+# https://www.gnu.org/licenses/gpl-3.0.en.html
+# https://eupl.eu/
+# Program/Design Name:    DIYRoboCar-Servo
+# Description:    This is a program to drive a 2 wheeled car, driven by servos
+# Dependencies:   Arduino C++
+# Revision: 
+#  Revision 0.02 - Updated 05/11/2019 for SVCTE Mechatronics Class
+#  Revision 0.01 - Created 05/11/2019
+# Additional Comments: 
+# 
+# ============================================================================
+*/
+// Defines Libraries
+#include <Servo.h>
+
+// Defines Pins Numbers
+  // UltraSonic Pins
+    const int trigPinFL = 5;
+    const int echoPinFL = 4;
+    const int trigPinFR = 3;
+    const int echoPinFR = 2;
+  // Drive Servos are on Pin 9 and 10
+    Servo leftDriveSservo;  // create servo object to control a servo
+    Servo rightDriveSservo;  // create servo object to control a servo
+    // twelve servo objects can be created on most boards
+// defines variables
+  // UltraSonic Variables
+    long duration;
+    int distanceFL;
+    int distanceFR;
+    int distanceBL;
+    int distanceBR;
+
+// Debug Variables    
+  int incomingByte = 0;   // for incoming serial data
+
+// Drive Control Variables (generic to all cars)
+  char driveDirection = 'S'; // S=STOP, F=Forward, B=Reverse
+  char leftDirection = 'S'; // S=STOP, F=Forward, B=Reverse
+  char rightDirection = 'S';  // S=STOP, F=Forward, B=Reverse  
+  
+// Personality Settings For Diffrent Servo Based Robot Cars
+  // GrayBug
+    int stopLeftMotorSetPoint = 93;  // You will want to find the value for your cars motors
+    int stopRightMotorSetPoint = 93;
+    int maxForwardSpeed = 180;
+    int maxReverseSpeed = 0;
+    int pos = 0;    // variable to store the servo position
+    int throttle = 1;  // change this (0-180) to control the speed of the motors
+    int leftThrottle = 1;  // change this (0-180) to control the speed of the motors
+    int rightThrottle = 1;  // change this (0-180) to control the speed of the motors
+
+void setup() {
+  Serial.begin(9600);
+
+  pinMode(trigPinFL, OUTPUT); // Sets the trigPin as an Output
+  pinMode(echoPinFL, INPUT); // Sets the echoPin as an Input
+  pinMode(trigPinFR, OUTPUT); // Sets the trigPin as an Output
+  pinMode(echoPinFR, INPUT); // Sets the echoPin as an Input
+
+
+  // initialize digital pin LED_BUILTIN as an output.
+  pinMode(LED_BUILTIN, OUTPUT);
+
+  // Motor, Drive Settings
+  leftDriveSservo.attach(9);  // attaches the servo on pin 9 to the servo object
+  rightDriveSservo.attach(10);  // attaches the servo on pin 9 to the servo object
+
+ // Check that System Is Safe
+  allDriveMotorsStop();
+  delay(5000);
+  
+}
+
+void loop() {
+/* driveDirection
+ *  S = Stop
+ *  F = Forward
+ *  B = Reverse
+ *  R = Spin Right
+ *  L = Spin Left
+ *  r = Slow Turn Right (Forward)
+ *  l = Slow Turn Left (Forward)  
+ */
+distanceFL = checkDistance("FL");
+  Serial.print("Distance for FL: ");
+  Serial.println(distanceFL);
+distanceFR = checkDistance("FR");
+  Serial.print("Distance for FR: ");
+  Serial.println(distanceFR);  
+if((distanceFL <  6) and (distanceFR < 6)){
+  drive('F', throttle);
+}  
+else {
+  drive('S', throttle);
+  delay(500);
+  if((distanceFL > 4) and (distanceFR > 4)){
+  drive('B', throttle);
+  delay(1000);
+  drive('L', throttle);
+  delay(400);
+  drive('S', throttle);
+  delay(500);    
+  }
+  else if(distanceFL > 4){
+  drive('B', throttle);
+  delay(500);
+  drive('L', throttle);
+  delay(400);
+  drive('S', throttle);
+  delay(500);        
+  }
+  else if(distanceFR > 4){
+  drive('B', throttle);
+  delay(500);
+  drive('R', throttle);
+  delay(400); 
+  drive('S', throttle);
+  delay(500);       
+  }
+  else {
+  drive('B', throttle);
+  delay(500);
+  drive('S', throttle);
+  delay(5000);      
+  }        
+}
+
+}
+
+int checkDistance (int sensor)
+{
+  int echo;
+  int distance;
+  if (sensor == "FL"){
+    // Clears the trigPin
+    digitalWrite(trigPinFL, LOW);
+    delayMicroseconds(2);
+
+    // Sets the trigPin on HIGH state for 10 micro seconds
+    digitalWrite(trigPinFL, HIGH);
+    delayMicroseconds(10);
+    digitalWrite(trigPinFL, LOW);
+    duration = pulseIn(echoPinFL, HIGH); 
+   
+  }  
+  else if (sensor == "FR"){
+    // Clears the trigPin
+    digitalWrite(trigPinFR, LOW);
+    delayMicroseconds(2);
+
+    // Sets the trigPin on HIGH state for 10 micro seconds
+    digitalWrite(trigPinFR, HIGH);
+    delayMicroseconds(10);
+    digitalWrite(trigPinFR, LOW);
+    duration = pulseIn(echoPinFR, HIGH);    
+       
+  }
+  // Reads the echoPin, returns the sound wave travel time in microseconds
+  
+  // Calculating the distance
+  distance = duration * 0.034 / 2;
+  return(distance); 
+}
+void allDriveMotorsStop()
+// Stops all servo drive motors - Should we disconnect to save morotrs?
+{
+  leftDriveSservo.write(93); 
+  rightDriveSservo.write(93); 
+  Serial.println(" sent Stopped "); 
+  Serial.println("All Motors STOPPED");
+}
+
+int allDriveMotorsForward(int throttle)
+{
+    // throttle is a parameter to multiply with the max speed of the servo
+  leftDriveSservo.write(180); // CCW
+  rightDriveSservo.write(0); // CW
+  Serial.println(" sent Forward "); 
+  Serial.print("car is Forward at a speed of ");
+  Serial.println(throttle);
+}
+int allDriveMotorsReverse(int throttle)
+{
+    // throttle is a parameter to multiply with the max speed of the servo
+  leftDriveSservo.write(0); // CCW
+  rightDriveSservo.write(180); // CW
+  Serial.println(" sent Reverse "); 
+  Serial.print("car is Reverse at a speed of ");
+  Serial.println(throttle);
+}
+
+int drive(char driveDirection, int throttle)
+/* driveDirection
+ *  S = Stop
+ *  F = Forward
+ *  B = Reverse
+ *  R = Spin Right
+ *  L = Spin Left
+ *  r = Slow Turn Right (Forward)
+ *  l = Slow Turn Left (Forward)
+ *  
+ *  
+ */
+  {
+    if(driveDirection=='F') // Forward
+    {
+      // throttle is a parameter to multiply with the max speed of the servo
+      leftDriveSservo.write(180); // CCW
+      rightDriveSservo.write(0); // CW
+      Serial.println(" sent Forward "); 
+      Serial.print("car is Forward at a speed of ");
+      Serial.println(throttle);
+    }
+    else if(driveDirection=='L') // Slight Left
+    {
+      leftDriveSservo.write(180); // CCW
+      rightDriveSservo.write(180); // CCW
+      Serial.println(" sent Spin Left "); 
+    }
+    else if(driveDirection=='R') // Slight Right
+    {
+      leftDriveSservo.write(0); // CCW
+      rightDriveSservo.write(0); // CCW
+      Serial.println(" sent Spin Right "); 
+    }    
+    else if(driveDirection=='l') // Slight Left
+    {
+      leftDriveSservo.write(140); 
+      rightDriveSservo.write(30); 
+      Serial.println(" sent Stopped "); 
+      Serial.println("All Motors STOPPED");
+    }
+    else if(driveDirection=='r') // Slight Right
+    {
+      leftDriveSservo.write(30); 
+      rightDriveSservo.write(140); 
+      Serial.println(" sent Stopped "); 
+      Serial.println("All Motors STOPPED");
+    }
+    else if(driveDirection=='B')
+    {
+      // throttle is a parameter to multiply with the max speed of the servo
+      leftDriveSservo.write(0); // CCW
+      rightDriveSservo.write(180); // CW
+      Serial.println(" sent Reverse "); 
+      Serial.print("car is Reverse at a speed of ");
+      Serial.println(throttle);
+    }
+    else if(driveDirection=='S')
+    {
+      leftDriveSservo.write(93); 
+      rightDriveSservo.write(93); 
+      Serial.println(" sent Stopped "); 
+      Serial.println("All Motors STOPPED");
+    }
+    else
+    {
+      Serial.print("What? ");
+      leftDriveSservo.write(93); 
+      rightDriveSservo.write(93); 
+      Serial.println(" sent Stopped "); 
+      Serial.println("All Motors STOPPED");
+    }
+
+}
